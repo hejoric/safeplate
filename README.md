@@ -1,4 +1,4 @@
-# SafePlate 🍃
+# SafePlate
 
 **The first eating disorder recovery app with AI-powered safety monitoring**
 

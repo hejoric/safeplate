@@ -7,13 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        sage: '#87A96B',
-        warmbeige: '#F5E6D3',
-        coral: '#FF9F89',
-        warning: '#FFD97D',
-        critical: '#FF6B6B',
-        offwhite: '#FAFAF9',
-        darkgray: '#2D3748',
+        sage: '#B8AA87',
+        warmbeige: '#D7C5A6',
+        coral: '#B89A76',
+        warning: '#C9A86A',
+        critical: '#C27A6D',
+        offwhite: '#3B352D',
+        darkgray: '#D7C5A6',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -25,13 +25,18 @@ export default {
     themes: [
       {
         safeplate: {
-          primary: '#87A96B',
-          secondary: '#F5E6D3',
-          accent: '#FF9F89',
-          warning: '#FFD97D',
-          error: '#FF6B6B',
-          'base-100': '#FAFAF9',
-          'base-content': '#2D3748',
+          primary: '#c6b893',
+          'primary-content': '#2A241E',
+          secondary: '#8F846A',
+          'secondary-content': '#F3E9D5',
+          accent: '#A99776',
+          warning: '#C9A86A',
+          error: '#C27A6D',
+          neutral: '#2F2922',
+          'base-100': '#3B352D',
+          'base-200': '#332D25',
+          'base-300': '#474036',
+          'base-content': '#D7C5A6',
         },
       },
     ],

@@ -3,30 +3,30 @@ import { CRISIS_RESOURCES, ORGANIZATION_LINKS } from '../utils/constants'
 export default function Resources() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-darkgray mb-8">Crisis & Support Resources</h1>
+      <h1 className="text-3xl font-bold text-base-content mb-8">Crisis & Support Resources</h1>
 
       <div className="card bg-primary/10 border-2 border-primary mb-8">
         <div className="card-body">
-          <h2 className="card-title text-2xl">Talk to Someone Now</h2>
+          <h2 className="card-title text-2xl">Reach support now</h2>
           <p className="text-base-content/80">
             These resources are available 24/7. You don't have to face this alone.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             <a
               href={CRISIS_RESOURCES.neda.tel}
-              className="btn btn-primary btn-lg bg-sage border-sage hover:bg-sage/90"
+              className="btn btn-primary btn-lg"
             >
               📞 NEDA: {CRISIS_RESOURCES.neda.phone}
             </a>
             <a
               href={CRISIS_RESOURCES.crisisText.sms}
-              className="btn btn-primary btn-lg bg-sage border-sage hover:bg-sage/90"
+              className="btn btn-primary btn-lg"
             >
               💬 Text NEDA to 741741
             </a>
             <a
               href={CRISIS_RESOURCES.suicideLifeline.tel}
-              className="btn btn-primary btn-lg bg-sage border-sage hover:bg-sage/90"
+              className="btn btn-primary btn-lg"
             >
               📞 988 Lifeline
             </a>
@@ -43,7 +43,7 @@ export default function Resources() {
               href={org.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="card bg-base-100 shadow-md border border-base-200 hover:shadow-lg transition-shadow"
+              className="card bg-base-100 border border-base-200"
             >
               <div className="card-body">
                 <h3 className="card-title text-lg">{org.name}</h3>

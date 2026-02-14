@@ -9,7 +9,7 @@ import Settings from './pages/Settings'
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-offwhite" data-theme="safeplate">
+      <div className="min-h-screen flex flex-col bg-base-100" data-theme="safeplate">
         <Navbar />
         <main className="flex-1">
           <Routes>

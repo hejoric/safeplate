@@ -76,10 +76,10 @@ export default function Settings() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-darkgray mb-8">Settings</h1>
+      <h1 className="text-3xl font-bold text-base-content mb-8">Settings</h1>
 
       <form onSubmit={handleSaveContact} className="space-y-6">
-        <div className="card bg-base-100 shadow-md border border-base-200">
+        <div className="card bg-base-100 border border-base-200">
           <div className="card-body">
             <h2 className="card-title">Profile</h2>
             <div className="form-control">
@@ -97,7 +97,7 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-md border border-base-200">
+        <div className="card bg-base-100 border border-base-200">
           <div className="card-body">
             <h2 className="card-title">Trusted Contact</h2>
             <p className="text-sm text-base-content/80 mb-4">
@@ -150,14 +150,14 @@ export default function Settings() {
 
         <button
           type="submit"
-          className="btn btn-primary bg-sage border-sage"
+          className="btn btn-primary"
           disabled={loading}
         >
           {loading ? 'Saving...' : 'Save Settings'}
         </button>
       </form>
 
-      <div className="card bg-base-100 shadow-md border border-base-200 mt-8">
+      <div className="card bg-base-100 border border-base-200 mt-8">
         <div className="card-body">
           <h2 className="card-title">Your Data</h2>
           <div className="flex gap-4">

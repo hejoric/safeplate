@@ -80,7 +80,7 @@ export default function Journal() {
       console.error('Analysis failed:', err)
       setRiskData({
         riskLevel: 'safe',
-        explanation: 'Unable to analyze. Entry saved without AI check.',
+        explanation: 'Unable to review this entry right now. It can still be saved.',
       })
       await handleSave({ riskLevel: 'safe', detectedFlags: [], explanation: '' })
     } finally {
@@ -103,7 +103,7 @@ export default function Journal() {
       setMood(3)
       setEnergy(3)
       setRiskData(null)
-      setSuccessMessage('Entry saved! 💚')
+      setSuccessMessage('Entry saved.')
       loadEntries()
       loadPatterns()
       setTimeout(() => setSuccessMessage(''), 3000)
@@ -121,7 +121,7 @@ export default function Journal() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-darkgray mb-6">How are you feeling today?</h1>
+      <h1 className="text-3xl font-bold text-base-content mb-6">How are you feeling today?</h1>
 
       {patternAlert && (
         <div className="alert alert-info mb-6">
@@ -130,7 +130,7 @@ export default function Journal() {
             <p className="text-sm">You're not alone. {patternAlert.concerningPatterns?.join(' ')}</p>
             <button
               onClick={() => navigate('/resources')}
-              className="btn btn-sm btn-primary mt-2 bg-sage"
+              className="btn btn-sm btn-primary mt-2"
             >
               View Resources
             </button>
@@ -138,7 +138,7 @@ export default function Journal() {
         </div>
       )}
 
-      <div className="card bg-base-100 shadow-lg border border-base-200 mb-8">
+      <div className="card bg-base-100 border border-base-200 mb-8">
         <div className="card-body">
           <div className="form-control">
             <label className="label">
@@ -194,13 +194,13 @@ export default function Journal() {
 
           <button
             onClick={handleSubmit}
-            className="btn btn-primary bg-sage border-sage hover:bg-sage/90"
+            className="btn btn-primary"
             disabled={loading || (riskData?.riskLevel === 'critical')}
           >
             {loading ? (
               <>
                 <span className="loading loading-spinner loading-sm"></span>
-                Analyzing...
+                Checking...
               </>
             ) : (
               'Save Entry'
@@ -228,7 +228,7 @@ export default function Journal() {
         <div className="space-y-4">
           <p>Your safety matters. These resources are available 24/7:</p>
           <div className="flex flex-col gap-2">
-            <a href={CRISIS_RESOURCES.neda.tel} className="btn btn-primary bg-sage">
+            <a href={CRISIS_RESOURCES.neda.tel} className="btn btn-primary">
               NEDA: {CRISIS_RESOURCES.neda.phone}
             </a>
             <a href={CRISIS_RESOURCES.crisisText.sms} className="btn btn-outline">

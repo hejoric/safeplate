@@ -17,7 +17,7 @@ export default function JournalEntryCard({ entry }) {
   ) : null
 
   return (
-    <div className="card bg-base-100 shadow-md border border-base-200">
+    <div className="card bg-base-100 border border-base-200">
       <div className="card-body p-4">
         <div className="flex justify-between items-start">
           <span className="text-sm text-base-content/70">{formattedDate}</span>

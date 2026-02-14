@@ -5,7 +5,7 @@ export default function AlertBanner({ type, message, supportMessage, onTalkToSom
   const isConcerning = type === 'concerning'
 
   return (
-    <div className={`alert ${isCritical ? 'alert-error' : 'alert-warning'} shadow-lg mb-4`}>
+    <div className={`alert ${isCritical ? 'alert-error' : 'alert-warning'} mb-4`}>
       <div className="flex-1">
         <h3 className="font-bold">
           {isCritical ? '⚠️ We\'re concerned about your safety' : '💛 Take a moment'}
@@ -35,7 +35,7 @@ export default function AlertBanner({ type, message, supportMessage, onTalkToSom
         {onTalkToSomeone && (isConcerning || isCritical) && (
           <button
             onClick={onTalkToSomeone}
-            className="btn btn-primary btn-sm mt-3 bg-sage border-sage"
+            className="btn btn-primary btn-sm mt-3"
           >
             Would you like to talk to someone?
           </button>
