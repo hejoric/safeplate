@@ -1,8 +1,51 @@
-# SafePlate 🍃 **The first eating disorder recovery app with AI-powered safety monitoring** ## The Problem Fitness tracking apps are weaponized by eating disorder communities. Pro-ana content spreads unchecked. 18% of college students struggle with EDs, and technology makes it worse. ## Our Solution SafePlate combines wellness journaling with real-time AI safety moderation. We detect harmful content, intervene with compassionate support, and alert trusted contacts when dangerous patterns emerge. ## Features - 🛡️ **AI Safety Moderation**: Gemini 2.0 detects pro-ED content in real-time - 💚 **Supportive Interventions**: PatriotAI generates personalized encouragement - 📊 **Pattern Detection**: Monitors concerning behavioral trends - 🔒 **Privacy-First Alerts**: Trusted contacts notified without exposing journal content - 📋 **Crisis Resources**: Immediate access to NEDA, 988, and support organizations ## Tech Stack - Frontend: React + Vite + Tailwind + DaisyUI - Backend: Python FastAPI + SQLAlchemy + SQLite - AI: Google Gemini 2.0 Flash + PatriotAI - 
+# SafePlate 🍃
 
-Deployment: Vercel + Render ## Setup ### Frontend ```bash cd safeplate npm install npm run dev ``` ###
+**The first eating disorder recovery app with AI-powered safety monitoring**
 
- Backend ```bash cd backend pip install -r requirements.txt uvicorn main:app --reload ``` ### Environment Variables
-  Create `backend/.env`: ``` GEMINI_API_KEY=your_key PATRIOTAI_API_KEY=your_key DATABASE_URL=sqlite:///./safeplate.db ```
-  
-   ## Built With - Google Gemini API - PatriotAI (Microsoft + Cloudforce) --- **Disclaimer:** SafePlate is educational software, not medical advice. If you're in crisis, call 988 or text "NEDA" to 741741. # pathack26test1
+## The Problem
+Fitness tracking apps are weaponized by eating disorder communities. Pro-ana content spreads unchecked. 18% of college students struggle with EDs, and technology makes it worse.
+
+## Our Solution
+SafePlate combines wellness journaling with real-time AI safety moderation. We detect harmful content, intervene with compassionate support, and alert trusted contacts when dangerous patterns emerge.
+
+## Features
+- 🛡️ **AI Safety Moderation**: Gemini 2.0 detects pro-ED content in real-time
+- 💚 **Supportive Interventions**: Gemini generates personalized encouragement when needed
+- 📊 **Pattern Detection**: Monitors concerning behavioral trends
+- 🔒 **Privacy-First Alerts**: Trusted contacts notified without exposing journal content
+- 📋 **Crisis Resources**: Immediate access to NEDA, 988, and support organizations
+
+## Tech Stack
+- Frontend: React + Vite + Tailwind + DaisyUI
+- Backend: Python FastAPI + SQLAlchemy + SQLite
+- AI: Google Gemini 2.0 Flash
+- Deployment: Vercel + Render
+
+## Setup
+
+### Frontend
+```bash
+cd safeplate
+npm install
+npm run dev
+```
+
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+### Environment Variables
+Create `backend/.env`:
+```
+GEMINI_API_KEY=your_key
+DATABASE_URL=sqlite:///./safeplate.db
+```
+
+## Built With
+- Google Gemini API
+
+---
+**Disclaimer:** SafePlate is educational software, not medical advice. If you're in crisis, call 988 or text "NEDA" to 741741.
