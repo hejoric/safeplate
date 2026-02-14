@@ -23,6 +23,10 @@ app.add_middleware(
 
 init_db()
 
+# Log Gemini API key status on startup (does not expose the key)
+key = os.getenv("GEMINI_API_KEY")
+print(f"[SAFEPLATE] GEMINI_API_KEY: {'loaded' if key else 'MISSING - add to backend/.env'}")
+
 
 # Pydantic models
 class JournalAnalyzeRequest(BaseModel):

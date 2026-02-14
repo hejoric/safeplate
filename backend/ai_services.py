@@ -9,7 +9,7 @@ def analyze_journal_with_gemini(text: str) -> dict:
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         
         model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash-exp",  # Use gemini-2.0-flash if exp unavailable
+            model_name="gemini-1.5-flash",  # Stable model - use gemini-2.0-flash if preferred
             generation_config={
                 "response_mime_type": "application/json",
                 "temperature": 0.3,
@@ -48,7 +48,7 @@ Be sensitive but err on the side of caution. It's better to flag something borde
         result = json.loads(response.text)
         return result
     except Exception as e:
-        print(f"Gemini error: {e}")
+        print(f"[SAFEPLATE] Gemini analyze error: {e}")
         return {
             "riskLevel": "safe",
             "detectedFlags": [],
@@ -68,7 +68,7 @@ def generate_support_message(flagged_content: str, risk_level: str) -> str:
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         
         model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash-exp",
+            model_name="gemini-1.5-flash",
             generation_config={"temperature": 0.7}
         )
         
