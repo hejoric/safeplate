@@ -1,0 +1,9 @@
+{
+  "name": "safeplate-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix safeplate",
+    "build": "npm run build --prefix safeplate",
+    "preview": "npm run preview --prefix safeplate"
+  }
+}
