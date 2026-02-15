@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import MoodSlider from '../components/MoodSlider'
 import EnergySlider from '../components/EnergySlider'
 import AlertBanner from '../components/AlertBanner'
 import Modal from '../components/Modal'
 import { analyzeJournal, saveJournalEntry, getJournalEntries, getJournalPatterns } from '../utils/api'
 import { CRISIS_KEYWORDS, CRISIS_RESOURCES } from '../utils/constants'
+import { markTodayFocusStep } from '../utils/todayFocusProgress'
 
 const DEFAULT_MOOD = 3
 const DEFAULT_ENERGY = 3
@@ -13,8 +14,12 @@ const MOOD_ICONS = ['', '😞', '😟', '😐', '🙂', '😊']
 const ENERGY_ICONS = ['', '🪫', '🔋', '🔋', '🔋', '⚡']
 
 export default function Journal() {
+  const location = useLocation()
   const navigate = useNavigate()
   const mealFieldRef = useRef(null)
+  const moodEnergyRef = useRef(null)
+  const notesFieldRef = useRef(null)
+  const handledFocusKeyRef = useRef('')
   const [meal, setMeal] = useState('')
   const [mood, setMood] = useState(DEFAULT_MOOD)
   const [energy, setEnergy] = useState(DEFAULT_ENERGY)
@@ -29,6 +34,7 @@ export default function Journal() {
   const [errorMessage, setErrorMessage] = useState('')
   const [selectedEntry, setSelectedEntry] = useState(null)
   const [showAllEntries, setShowAllEntries] = useState(false)
+  const [highlightTarget, setHighlightTarget] = useState('')
 
   const loadEntries = async () => {
     try {
@@ -206,10 +212,86 @@ export default function Journal() {
     navigate('/resources')
   }
 
-  const focusMealField = () => {
-    mealFieldRef.current?.focus()
-    mealFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const handleMealChange = (event) => {
+    const nextValue = event.target.value
+    setMeal(nextValue)
+
+    if (nextValue.trim().length > 0) {
+      markTodayFocusStep('meal')
+    }
   }
+
+  const handleMoodChange = (nextMoodValue) => {
+    setMood(nextMoodValue)
+    markTodayFocusStep('checkin')
+  }
+
+  const handleEnergyChange = (nextEnergyValue) => {
+    setEnergy(nextEnergyValue)
+    markTodayFocusStep('checkin')
+  }
+
+  const handleNotesChange = (event) => {
+    const nextValue = event.target.value
+    setNotes(nextValue)
+
+    if (nextValue.trim().length > 0) {
+      markTodayFocusStep('checkin')
+    }
+  }
+
+  const focusTargetWithHighlight = (target) => {
+    const targetMap = {
+      meal: mealFieldRef,
+      'mood-energy': moodEnergyRef,
+      notes: notesFieldRef,
+    }
+
+    const targetRef = targetMap[target]
+    const targetElement = targetRef?.current
+
+    if (!targetElement) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+    if (target === 'mood-energy') {
+      const moodRange = document.getElementById('mood-range')
+      if (moodRange) {
+        moodRange.focus()
+      } else {
+        targetElement.focus()
+      }
+    } else {
+      targetElement.focus()
+    }
+
+    setHighlightTarget(target)
+    window.setTimeout(() => setHighlightTarget(''), 1400)
+  }
+
+  useEffect(() => {
+    const focusTarget = location.state?.focusTarget
+    if (!focusTarget) {
+      return
+    }
+
+    const locationFocusKey = `${location.key}-${focusTarget}`
+    if (handledFocusKeyRef.current === locationFocusKey) {
+      return
+    }
+
+    handledFocusKeyRef.current = locationFocusKey
+
+    const timerId = window.setTimeout(() => {
+      focusTargetWithHighlight(focusTarget)
+      navigate(location.pathname, { replace: true, state: null })
+    }, 260)
+
+    return () => window.clearTimeout(timerId)
+  }, [location, navigate])
 
   return (
     <div className="max-w-[var(--sp-journal-max-width)] mx-auto px-4 md:px-6 pt-8 pb-16">
@@ -253,10 +335,11 @@ export default function Journal() {
                 <textarea
                   id="meal"
                   ref={mealFieldRef}
-                  className="textarea textarea-bordered rounded-[var(--sp-journal-card-radius)] min-h-[6.875rem] w-full text-[var(--sp-journal-control-text)] leading-[1.5] py-[var(--sp-journal-control-pad-y)] px-[var(--sp-journal-control-pad-x)] border-base-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  data-focus-target="meal"
+                  className={`textarea textarea-bordered rounded-[var(--sp-journal-card-radius)] min-h-[6.875rem] w-full text-[var(--sp-journal-control-text)] leading-[1.5] py-[var(--sp-journal-control-pad-y)] px-[var(--sp-journal-control-pad-x)] border-base-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all ${highlightTarget === 'meal' ? 'ring-2 ring-primary/45 shadow-[0_0_0_3px_rgba(210,190,150,0.12)]' : ''}`}
                   placeholder="Example. Had oatmeal. Felt steady after"
                   value={meal}
-                  onChange={(e) => setMeal(e.target.value)}
+                  onChange={handleMealChange}
                 />
                 <p className="text-[0.99rem] text-base-content/80 mt-2">Optional. Write what you ate or how it felt.</p>
                 {meal.length > 0 && (
@@ -264,8 +347,17 @@ export default function Journal() {
                 )}
               </div>
 
-              <MoodSlider value={mood} onChange={setMood} disabled={isBusy} />
-              <EnergySlider value={energy} onChange={setEnergy} disabled={isBusy} />
+              <div
+                ref={moodEnergyRef}
+                data-focus-target="mood-energy"
+                tabIndex={-1}
+                className={`rounded-[0.95rem] transition-all ${highlightTarget === 'mood-energy' ? 'ring-2 ring-primary/45 shadow-[0_0_0_3px_rgba(210,190,150,0.12)]' : ''}`}
+              >
+                <MoodSlider value={mood} onChange={handleMoodChange} disabled={isBusy} />
+                <div className="mt-5">
+                  <EnergySlider value={energy} onChange={handleEnergyChange} disabled={isBusy} />
+                </div>
+              </div>
 
               <div className="form-control">
                 <label htmlFor="notes" className="label pb-2">
@@ -273,10 +365,12 @@ export default function Journal() {
                 </label>
                 <textarea
                   id="notes"
-                  className="textarea textarea-bordered rounded-[var(--sp-journal-card-radius)] min-h-[8.25rem] w-full text-[var(--sp-journal-control-text)] leading-[1.5] py-[var(--sp-journal-control-pad-y)] px-[var(--sp-journal-control-pad-x)] border-base-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  ref={notesFieldRef}
+                  data-focus-target="notes"
+                  className={`textarea textarea-bordered rounded-[var(--sp-journal-card-radius)] min-h-[8.25rem] w-full text-[var(--sp-journal-control-text)] leading-[1.5] py-[var(--sp-journal-control-pad-y)] px-[var(--sp-journal-control-pad-x)] border-base-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all ${highlightTarget === 'notes' ? 'ring-2 ring-primary/45 shadow-[0_0_0_3px_rgba(210,190,150,0.12)]' : ''}`}
                   placeholder="Example. Felt anxious in the morning, better after a walk"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={handleNotesChange}
                 />
                 {notes.length > 0 && (
                   <p className="text-[0.99rem] text-base-content/75 mt-1">{notes.length} characters</p>

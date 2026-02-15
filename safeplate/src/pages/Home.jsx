@@ -1,9 +1,55 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import FeaturesCarousel from '../components/FeaturesCarousel'
 import RotatingWordLoop from '../components/RotatingWordLoop'
 import heroImage from '../assets/pexels-rdne-6414641.jpg'
+import { getTodayFocusProgress } from '../utils/todayFocusProgress'
 
 export default function Home() {
+  const navigate = useNavigate()
+  const [todayProgress, setTodayProgress] = useState(() => getTodayFocusProgress())
+
+  const todayFocusSteps = [
+    {
+      id: 1,
+      target: 'meal',
+      text: 'Log one meal or snack, no judgment.',
+    },
+    {
+      id: 2,
+      target: 'mood-energy',
+      text: 'Rate your mood and energy, then write one sentence about what helped.',
+    },
+  ]
+
+  const handleFocusStep = (target) => {
+    navigate('/journal', { state: { focusTarget: target } })
+  }
+
+  useEffect(() => {
+    const refreshProgress = () => {
+      setTodayProgress(getTodayFocusProgress())
+    }
+
+    refreshProgress()
+    window.addEventListener('focus', refreshProgress)
+    window.addEventListener('storage', refreshProgress)
+    document.addEventListener('visibilitychange', refreshProgress)
+
+    return () => {
+      window.removeEventListener('focus', refreshProgress)
+      window.removeEventListener('storage', refreshProgress)
+      document.removeEventListener('visibilitychange', refreshProgress)
+    }
+  }, [])
+
+  const completionByTarget = {
+    meal: todayProgress.steps.meal,
+    'mood-energy': todayProgress.steps.checkin,
+  }
+
+  const completedCount = Object.values(completionByTarget).filter(Boolean).length
+
   return (
     <div className="min-h-screen bg-base-100">
       <section
@@ -40,17 +86,52 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-7">
             {/* Today's Focus */}
-            <div className="border-2 border-primary/40 rounded-box p-7 md:p-9 bg-base-300 text-center flex flex-col justify-center">
-              <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">Today's focus</h2>
-              <p className="text-sm md:text-base text-base-content/80 mb-5">
-                Start with one small step. Calm, steady progress is enough.
+            <section className="rounded-[1.1rem] p-6 md:p-7 bg-base-200/85 border border-[rgba(210,190,150,0.18)] shadow-[0_14px_34px_-24px_rgba(0,0,0,0.72)] text-left">
+              <header className="flex items-start justify-between gap-3">
+                <h3 className="text-[1.32rem] md:text-[1.38rem] leading-[1.25] font-semibold text-base-content">Today&apos;s focus</h3>
+                <span className="inline-flex items-center rounded-full border border-[rgba(210,190,150,0.35)] bg-[rgba(210,190,150,0.08)] px-3 py-1.5 text-[0.9rem] leading-none text-base-content/85">
+                  Quick
+                </span>
+              </header>
+
+              <p className="mt-[10px] text-[1.02rem] md:text-[1.06rem] leading-[1.62] text-base-content/85 max-w-[36ch]">
+                Pick one small step. Calm progress is enough.
               </p>
-              <ul className="space-y-3 md:space-y-4 text-sm md:text-base text-base-content leading-relaxed text-left">
-                <li>• Record one meal or snack without judgment.</li>
-                <li>• Check in on mood and energy.</li>
-                <li>• Write one sentence about what helped today.</li>
+
+              <ul className="mt-4 space-y-3.5" aria-label="Today&apos;s journal steps">
+                {todayFocusSteps.map((step) => (
+                  <li key={step.id}>
+                    {(() => {
+                      const isDone = completionByTarget[step.target]
+                      return (
+                    <button
+                      type="button"
+                      onClick={() => handleFocusStep(step.target)}
+                      className={`w-full min-h-[48px] rounded-xl border px-3.5 py-3 text-left flex items-center gap-3 transition-colors active:bg-base-100/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 ${isDone ? 'border-primary/45 bg-primary/12 hover:bg-primary/18' : 'border-primary/20 bg-base-100/25 hover:bg-base-100/45'}`}
+                    >
+                      <span className={`h-7 w-7 shrink-0 rounded-full border text-[0.95rem] font-semibold text-base-content inline-flex items-center justify-center ${isDone ? 'border-primary/65 bg-primary/30' : 'border-primary/45 bg-primary/15'}`} aria-hidden="true">
+                        {isDone ? '✓' : step.id}
+                      </span>
+                      <span className="flex-1 text-[1rem] leading-[1.5] text-base-content">{step.text}</span>
+                      <span className="inline-flex items-center gap-1 text-[0.93rem] text-base-content/75">
+                        {isDone ? 'Done' : 'Start'}
+                        <span aria-hidden="true">›</span>
+                      </span>
+                    </button>
+                      )
+                    })()}
+                  </li>
+                ))}
               </ul>
-            </div>
+
+              <div className="mt-4 pt-3 border-t border-[rgba(210,190,150,0.14)] flex items-center justify-between gap-3">
+                <p className="text-[0.95rem] text-base-content/75">{completedCount} of 2 done today</p>
+                <div className="flex items-center gap-2" aria-hidden="true">
+                  <span className={`h-2.5 w-2.5 rounded-full border border-primary/45 ${todayProgress.steps.meal ? 'bg-primary/60' : 'bg-transparent'}`} />
+                  <span className={`h-2.5 w-2.5 rounded-full border border-primary/45 ${todayProgress.steps.checkin ? 'bg-primary/60' : 'bg-transparent'}`} />
+                </div>
+              </div>
+            </section>
 
             {/* Ready to Start CTA */}
             <div className="rounded-box p-7 md:p-9 bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10 text-center flex flex-col justify-center">
@@ -59,8 +140,8 @@ export default function Home() {
                 Take the first step toward mindful self-care. Your journal is waiting.
               </p>
               <div className="flex flex-col items-center gap-3 md:gap-4">
-                <Link 
-                  to="/journal" 
+                <Link
+                  to="/journal"
                   className="btn btn-primary btn-lg text-lg px-7 py-3 h-auto shadow-xl hover:shadow-2xl transition-all transform hover:scale-105"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +169,7 @@ export default function Home() {
                 Built with care, designed for your wellbeing
               </p>
             </div>
-            
+
             {/* Right side - Carousel */}
             <div className="md:col-span-3">
               <FeaturesCarousel />
