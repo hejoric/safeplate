@@ -56,17 +56,19 @@ class TrustedContactRequest(BaseModel):
 async def analyze_journal(data: JournalAnalyzeRequest):
     combined_text = f"{data.meal} {data.notes}".strip()
     result = analyze_journal_with_gemini(combined_text)
-    
-    if result["riskLevel"] in ("concerning", "critical"):
-        result["supportMessage"] = generate_support_message(combined_text, result["riskLevel"])
-    else:
-        result["supportMessage"] = None
-    
+
+    ai_available = result.get("ai_available", True)
+
+    support_message = None
+    if ai_available and result["riskLevel"] in ("concerning", "critical"):
+        support_message = generate_support_message(combined_text, result["riskLevel"])
+
     return {
         "riskLevel": result["riskLevel"],
         "flags": result.get("detectedFlags", []),
         "explanation": result.get("explanation", ""),
-        "supportMessage": result.get("supportMessage"),
+        "supportMessage": support_message,
+        "aiAvailable": ai_available,
     }
 
 
