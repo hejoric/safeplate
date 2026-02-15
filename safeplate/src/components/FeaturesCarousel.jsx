@@ -5,16 +5,31 @@ const FEATURES = [
     id: 'pattern-awareness',
     title: 'Early pattern awareness',
     description: 'Entries are reviewed for signs that you may need additional support.',
+    icon: (
+      <svg className="w-24 h-24 md:w-28 md:h-28 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
   },
   {
     id: 'care-alerts',
     title: 'Care-centered alerts',
     description: 'When concerns appear, you get clear options to connect with support resources.',
+    icon: (
+      <svg className="w-24 h-24 md:w-28 md:h-28 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+    ),
   },
   {
     id: 'privacy',
     title: 'Private by default',
     description: 'Your journal remains yours, with focused safety features layered on top.',
+    icon: (
+      <svg className="w-24 h-24 md:w-28 md:h-28 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    ),
   },
 ]
 
@@ -82,16 +97,21 @@ export default function FeaturesCarousel() {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col items-center justify-center gap-8">
           {/* Carousel container */}
-          <div className="w-full min-h-[300px] flex items-center justify-center relative overflow-hidden">
+          <div className="w-full min-h-[500px] md:min-h-[550px] flex items-center justify-center relative overflow-hidden">
             {/* Slide content with swipe animation */}
             <div
               key={current.id}
               className="absolute inset-0 flex flex-col items-center justify-center px-8 animate-slide-in text-center"
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+              {/* Icon */}
+              <div className="mb-8 md:mb-10 transform hover:scale-110 transition-transform duration-300">
+                {current.icon}
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-bold text-base-content mb-5 md:mb-6 leading-tight">
                 {current.title}
               </h2>
-              <p className="text-lg text-yellow-50 max-w-2xl">
+              <p className="text-xl md:text-2xl text-base-content/70 max-w-2xl leading-relaxed">
                 {current.description}
               </p>
             </div>
@@ -102,13 +122,13 @@ export default function FeaturesCarousel() {
             {/* Prev button */}
             <button
               onClick={goToPrev}
-              className={`w-12 h-12 rounded-full border-2 border-yellow-50 flex items-center justify-center transition-colors ${
-                isAnimating ? 'cursor-not-allowed opacity-50' : 'hover:bg-yellow-50/10'
+              className={`w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
+                isAnimating ? 'cursor-not-allowed opacity-50' : 'hover:bg-primary/10 hover:shadow-lg'
               }`}
               aria-label="Previous slide"
             >
               <svg
-                className="w-5 h-5 text-yellow-50"
+                className="w-6 h-6 md:w-7 md:h-7 text-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -118,13 +138,13 @@ export default function FeaturesCarousel() {
             </button>
 
             {/* Slide indicators */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 md:gap-4">
               {FEATURES.map((feature, idx) => (
                 <button
                   key={feature.id}
                   onClick={() => goToIndex(idx)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    idx === currentIndex ? 'bg-yellow-50 w-8' : 'bg-yellow-50/40 w-2'
+                  className={`h-3 md:h-3.5 rounded-full transition-all duration-300 ${
+                    idx === currentIndex ? 'bg-primary w-10 md:w-12' : 'bg-base-content/30 w-3 md:w-3.5 hover:bg-base-content/50'
                   } ${isAnimating ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
@@ -134,13 +154,13 @@ export default function FeaturesCarousel() {
             {/* Next button */}
             <button
               onClick={goToNext}
-              className={`w-12 h-12 rounded-full border-2 border-yellow-50 flex items-center justify-center transition-colors ${
-                isAnimating ? 'cursor-not-allowed opacity-50' : 'hover:bg-yellow-50/10'
+              className={`w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
+                isAnimating ? 'cursor-not-allowed opacity-50' : 'hover:bg-primary/10 hover:shadow-lg'
               }`}
               aria-label="Next slide"
             >
               <svg
-                className="w-5 h-5 text-yellow-50"
+                className="w-6 h-6 md:w-7 md:h-7 text-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
