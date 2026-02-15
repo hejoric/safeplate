@@ -1,15 +1,129 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { saveTrustedContact, getSettings, exportData, deleteAllData } from '../utils/api'
 import Modal from '../components/Modal'
+
+function SettingsLayout({ children }) {
+  return (
+    <div className="max-w-[var(--sp-settings-max-width)] mx-auto px-4 md:px-6 pt-8 pb-16">
+      {children}
+    </div>
+  )
+}
+
+function SettingsCard({ title, children, className = '' }) {
+  return (
+    <section className={`card min-w-0 rounded-[var(--sp-settings-card-radius)] bg-base-100 border border-primary/25 shadow-sm ${className}`}>
+      <div className="card-body p-[var(--sp-settings-card-padding)] gap-5">
+        <h2 className="text-[1.35rem] md:text-[1.4rem] leading-[1.25] font-bold text-base-content">{title}</h2>
+        {children}
+      </div>
+    </section>
+  )
+}
+
+function FieldGroup({ id, label, helperText, errorText, children }) {
+  return (
+    <div className="space-y-2.5">
+      <label htmlFor={id} className="block text-[1rem] md:text-[1.06rem] font-medium text-base-content">
+        {label}
+      </label>
+      {children}
+      <p className={`text-[0.92rem] leading-[1.5] ${errorText ? 'text-error' : 'text-base-content/80'}`}>
+        {errorText || helperText}
+      </p>
+    </div>
+  )
+}
+
+function Toggle({ checked, onChange }) {
+  return (
+    <div className="space-y-2.5">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className="w-full rounded-[14px] border border-base-300 bg-base-200 px-4 py-3 flex items-center justify-between gap-4 text-left transition-colors hover:border-primary/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55"
+      >
+        <span className="text-[1rem] md:text-[1.05rem] font-medium text-base-content">Automated alerts for severe concerns</span>
+        <span
+          aria-hidden="true"
+          className={`relative inline-flex h-11 w-20 shrink-0 items-center rounded-full border transition-colors ${checked ? 'bg-primary border-primary/70' : 'bg-base-300 border-base-300'}`}
+        >
+          <span
+            className={`absolute h-9 w-9 rounded-full bg-base-100 border border-base-300 shadow-sm transition-transform ${checked ? 'translate-x-10' : 'translate-x-1'}`}
+          />
+        </span>
+      </button>
+      <p className="text-[0.92rem] leading-[1.5] text-base-content/80">
+        When enabled, SafePlate can notify your trusted contact if serious patterns are detected.
+      </p>
+    </div>
+  )
+}
+
+function DangerModal({
+  isOpen,
+  onClose,
+  confirmText,
+  setConfirmText,
+  onConfirm,
+  loading,
+}) {
+  const canDelete = confirmText.trim().toUpperCase() === 'DELETE' && !loading
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete all data?"
+    >
+      <div className="space-y-4">
+        <p className="text-[1rem] text-base-content/90 leading-[1.5]">
+          This permanently deletes your journal entries and settings from your account.
+        </p>
+        <div className="space-y-2">
+          <label htmlFor="delete-confirm" className="block text-[0.98rem] font-medium text-base-content">
+            Type DELETE to confirm
+          </label>
+          <input
+            id="delete-confirm"
+            type="text"
+            className="sp-settings-input"
+            value={confirmText}
+            onChange={(event) => setConfirmText(event.target.value)}
+            placeholder="DELETE"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={!canDelete}
+          className="btn btn-error w-full h-12 md:h-14 text-[1rem] md:text-[1.05rem] font-semibold"
+        >
+          {loading ? 'Deleting…' : 'Delete Everything'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
 
 export default function Settings() {
   const [firstName, setFirstName] = useState('')
   const [trustedEmail, setTrustedEmail] = useState('')
   const [trustedName, setTrustedName] = useState('')
   const [alertsEnabled, setAlertsEnabled] = useState(true)
+  const [initialSettings, setInitialSettings] = useState({
+    firstName: '',
+    trustedEmail: '',
+    trustedName: '',
+    alertsEnabled: true,
+  })
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [message, setMessage] = useState('')
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [toast, setToast] = useState({ type: '', message: '' })
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     loadSettings()
@@ -19,10 +133,17 @@ export default function Settings() {
     try {
       const data = await getSettings()
       if (data) {
-        setFirstName(data.first_name || '')
-        setTrustedEmail(data.trusted_contact_email || '')
-        setTrustedName(data.trusted_contact_name || '')
-        setAlertsEnabled(data.alerts_enabled !== false)
+        const nextSettings = {
+          firstName: data.first_name || '',
+          trustedEmail: data.trusted_contact_email || '',
+          trustedName: data.trusted_contact_name || '',
+          alertsEnabled: data.alerts_enabled !== false,
+        }
+        setFirstName(nextSettings.firstName)
+        setTrustedEmail(nextSettings.trustedEmail)
+        setTrustedName(nextSettings.trustedName)
+        setAlertsEnabled(nextSettings.alertsEnabled)
+        setInitialSettings(nextSettings)
       }
     } catch (err) {
       console.error('Failed to load settings:', err)
@@ -32,7 +153,7 @@ export default function Settings() {
   const handleSaveContact = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setMessage('')
+    setToast({ type: '', message: '' })
     try {
       await saveTrustedContact({
         first_name: firstName,
@@ -40,10 +161,12 @@ export default function Settings() {
         name: trustedName,
         alertsEnabled,
       })
-      setMessage('Settings saved!')
-      setTimeout(() => setMessage(''), 3000)
+      setInitialSettings({ firstName, trustedEmail, trustedName, alertsEnabled })
+      setToast({ type: 'success', message: 'Saved' })
+      setTimeout(() => setToast({ type: '', message: '' }), 2500)
     } catch (err) {
-      setMessage('Failed to save. Please try again.')
+      setToast({ type: 'error', message: 'Could not save' })
+      setTimeout(() => setToast({ type: '', message: '' }), 2800)
     } finally {
       setLoading(false)
     }
@@ -66,126 +189,183 @@ export default function Settings() {
 
   const handleDelete = async () => {
     try {
+      setDeleting(true)
       await deleteAllData()
+      setDeleteConfirmText('')
       setDeleteModalOpen(false)
       window.location.reload()
     } catch (err) {
       console.error('Delete failed:', err)
+    } finally {
+      setDeleting(false)
     }
   }
 
-  return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-base-content mb-8">Settings</h1>
+  const handleReset = () => {
+    setFirstName(initialSettings.firstName)
+    setTrustedEmail(initialSettings.trustedEmail)
+    setTrustedName(initialSettings.trustedName)
+    setAlertsEnabled(initialSettings.alertsEnabled)
+  }
 
-      <form onSubmit={handleSaveContact} className="space-y-6">
-        <div className="card bg-base-100 border border-base-200">
-          <div className="card-body">
-            <h2 className="card-title">Profile</h2>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">First name (for personalization)</span>
-              </label>
+  const hasChanges = useMemo(() => {
+    return (
+      firstName !== initialSettings.firstName ||
+      trustedEmail !== initialSettings.trustedEmail ||
+      trustedName !== initialSettings.trustedName ||
+      alertsEnabled !== initialSettings.alertsEnabled
+    )
+  }, [firstName, trustedEmail, trustedName, alertsEnabled, initialSettings])
+
+  const trustedEmailError = useMemo(() => {
+    if (!trustedEmail.trim()) {
+      return ''
+    }
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trustedEmail)
+    return validEmail ? '' : 'Enter a valid email address.'
+  }, [trustedEmail])
+
+  return (
+    <SettingsLayout>
+      <div className="mb-6 md:mb-7 rounded-[var(--sp-settings-card-radius)] bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 p-[1.35rem] md:p-[1.65rem]">
+        <h1 className="text-[2.8rem] md:text-[3.2rem] leading-[1.12] font-bold text-base-content">Settings</h1>
+        <p className="text-[1.15rem] md:text-[1.25rem] leading-[1.5] text-base-content/85 mt-3">
+          Manage your profile, trusted contact, and data controls in one calm, private space.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 items-start">
+        <form onSubmit={handleSaveContact} className="space-y-5 min-w-0">
+          <SettingsCard title="Profile">
+            <FieldGroup
+              id="first-name"
+              label="First name"
+              helperText="Used for personalization in your journal experience."
+            >
               <input
+                id="first-name"
                 type="text"
-                className="input input-bordered"
+                className="sp-settings-input"
                 placeholder="Your first name"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={(event) => setFirstName(event.target.value)}
               />
-            </div>
-          </div>
-        </div>
+            </FieldGroup>
+          </SettingsCard>
 
-        <div className="card bg-base-100 border border-base-200">
-          <div className="card-body">
-            <h2 className="card-title">Trusted Contact</h2>
-            <p className="text-sm text-base-content/80 mb-4">
-              Add a trusted person (therapist, parent, friend) who can receive private alerts 
-              when concerning patterns are detected. We never share your journal content.
+          <SettingsCard title="Trusted Contact">
+            <p className="text-[0.95rem] md:text-[1rem] leading-[1.55] text-base-content/85">
+              Add a trusted person who can receive private alerts when serious patterns are detected.<br />
+              We never share your journal content.
             </p>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Contact name</span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered"
-                placeholder="e.g. Mom, Dr. Smith"
-                value={trustedName}
-                onChange={(e) => setTrustedName(e.target.value)}
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Contact email</span>
-              </label>
-              <input
-                type="email"
-                className="input input-bordered"
-                placeholder="trusted@example.com"
-                value={trustedEmail}
-                onChange={(e) => setTrustedEmail(e.target.value)}
-              />
-            </div>
-            <div className="form-control">
-              <label className="label cursor-pointer justify-start gap-2">
+
+            <div className="space-y-5">
+              <FieldGroup
+                id="trusted-name"
+                label="Contact name"
+                helperText="Example: Mom, Dr. Smith, or a close friend"
+              >
                 <input
-                  type="checkbox"
-                  className="toggle toggle-primary"
-                  checked={alertsEnabled}
-                  onChange={(e) => setAlertsEnabled(e.target.checked)}
+                  id="trusted-name"
+                  type="text"
+                  className="sp-settings-input"
+                  placeholder="Contact name"
+                  value={trustedName}
+                  onChange={(event) => setTrustedName(event.target.value)}
                 />
-                <span className="label-text">Enable automated alerts for severe concerns</span>
-              </label>
+              </FieldGroup>
+
+              <FieldGroup
+                id="trusted-email"
+                label="Contact email"
+                helperText="We only use this email for trusted safety alerts."
+                errorText={trustedEmailError}
+              >
+                <input
+                  id="trusted-email"
+                  type="email"
+                  className={`sp-settings-input ${trustedEmailError ? 'border-error/65 focus:ring-error/40 focus:border-error/75' : ''}`}
+                  placeholder="trusted@example.com"
+                  value={trustedEmail}
+                  onChange={(event) => setTrustedEmail(event.target.value)}
+                />
+              </FieldGroup>
+
+              <Toggle checked={alertsEnabled} onChange={setAlertsEnabled} />
             </div>
-          </div>
-        </div>
+          </SettingsCard>
 
-        {message && (
-          <div className={`alert ${message.includes('saved') ? 'alert-success' : 'alert-error'}`}>
-            <span>{message}</span>
-          </div>
-        )}
+          <SettingsCard title="Save Changes">
+            <div className="space-y-3">
+              <button
+                type="submit"
+                className="btn btn-primary w-full h-14 md:h-[3.6rem] text-[1.06rem] md:text-[1.12rem] font-semibold"
+                disabled={loading || !hasChanges || !!trustedEmailError}
+              >
+                {loading ? 'Saving…' : 'Save Settings'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline w-full h-12 md:h-[3.2rem] text-[1rem]"
+                onClick={handleReset}
+                disabled={!hasChanges || loading}
+              >
+                Reset changes
+              </button>
+            </div>
+          </SettingsCard>
+        </form>
 
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={loading}
-        >
-          {loading ? 'Saving...' : 'Save Settings'}
-        </button>
-      </form>
-
-      <div className="card bg-base-100 border border-base-200 mt-8">
-        <div className="card-body">
-          <h2 className="card-title">Your Data</h2>
-          <div className="flex gap-4">
-            <button onClick={handleExport} className="btn btn-outline">
+        <div className="space-y-5 min-w-0">
+          <SettingsCard title="Your Data" className="lg:sticky lg:top-24">
+            <p className="text-[0.95rem] md:text-[1rem] text-base-content/85 leading-[1.55]">
+              Export includes your journal entries and current settings.
+            </p>
+            <button
+              type="button"
+              onClick={handleExport}
+              className="btn btn-outline w-full h-12 md:h-14 text-[1rem] md:text-[1.06rem] focus-visible:ring-2 focus-visible:ring-primary/55"
+            >
               Export My Data
             </button>
-            <button
-              onClick={() => setDeleteModalOpen(true)}
-              className="btn btn-outline btn-error"
-            >
-              Delete All Data
-            </button>
-          </div>
+
+            <div className="border-t border-base-300 pt-4 space-y-3">
+              <p className="text-[0.95rem] md:text-[1rem] text-base-content/85 leading-[1.55]">
+                Delete permanently removes all journal entries and settings from your account.
+              </p>
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(true)}
+                className="btn btn-outline btn-error w-full h-12 md:h-14 text-[1rem] md:text-[1.06rem] focus-visible:ring-2 focus-visible:ring-error/45"
+              >
+                Delete All Data
+              </button>
+            </div>
+          </SettingsCard>
         </div>
       </div>
 
-      <Modal
+      {toast.message && (
+        <div className="toast toast-end toast-bottom z-[70]">
+          <div className={`alert ${toast.type === 'success' ? 'alert-success' : 'alert-error'} shadow-lg`}>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      <DangerModal
         isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        title="Delete All Data?"
-      >
-        <p className="mb-4">
-          This will permanently delete all your journal entries and settings. This cannot be undone.
-        </p>
-        <button onClick={handleDelete} className="btn btn-error">
-          Yes, Delete Everything
-        </button>
-      </Modal>
-    </div>
+        onClose={() => {
+          if (!deleting) {
+            setDeleteModalOpen(false)
+            setDeleteConfirmText('')
+          }
+        }}
+        confirmText={deleteConfirmText}
+        setConfirmText={setDeleteConfirmText}
+        onConfirm={handleDelete}
+        loading={deleting}
+      />
+    </SettingsLayout>
   )
 }
